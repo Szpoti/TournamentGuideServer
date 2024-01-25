@@ -1,4 +1,4 @@
-﻿namespace WebApplication1
+﻿namespace TournamentGuideServer
 {
     public static class IOHelpers
     {

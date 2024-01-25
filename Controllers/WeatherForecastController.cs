@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using WebApplication1.Models;
+using TournamentGuideServer.Models;
 
-namespace WebApplication1.Controllers
+namespace TournamentGuideServer.Controllers
 {
     [ApiController]
     [Route("[controller]")]

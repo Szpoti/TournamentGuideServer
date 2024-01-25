@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using WebApplication1.Controllers;
+using TournamentGuideServer.Controllers;
 
 namespace TournamentGuideServer.Controllers
 {
@@ -9,11 +9,13 @@ namespace TournamentGuideServer.Controllers
     {
         private ILogger<RoundController> _logger;
         private RoundManager RoundManager { get; }
+        public PlayerManager PlayerManager { get; }
 
-        public RoundController(ILogger<RoundController> logger, RoundManager roundManager)
+        public RoundController(ILogger<RoundController> logger, RoundManager roundManager, PlayerManager playerManager)
         {
             _logger = logger;
             RoundManager = roundManager;
+            PlayerManager = playerManager;
         }
     }
 }

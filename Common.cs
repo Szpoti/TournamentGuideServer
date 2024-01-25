@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
-namespace WebApplication1
+namespace TournamentGuideServer
 {
     public static class Common
     {

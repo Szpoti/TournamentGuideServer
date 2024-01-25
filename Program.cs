@@ -1,6 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using System.Security.AccessControl;
 
-namespace WebApplication1
+namespace TournamentGuideServer
 {
     public class Program
     {
@@ -38,10 +39,14 @@ namespace WebApplication1
 
         private static void InjectDependencies(WebApplicationBuilder builder)
         {
+            var datadir = Common.GetDataDir();
+            PlayerManager playerManager = new(datadir);
             // Inject dependencies here.
+            builder.Services.AddSingleton(playerManager);
+
             builder.Services.AddSingleton(serviceProvider =>
             {
-                return new PlayerManager(Common.GetDataDir());
+                return new RoundManager(datadir, playerManager);
             });
         }
     }

@@ -1,9 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
-using WebApplication1.Models;
+using TournamentGuideServer.Models;
 
-namespace WebApplication1
+namespace TournamentGuideServer
 {
     public class PlayerManager
     {
@@ -51,6 +51,44 @@ namespace WebApplication1
         {
             var json = JsonSerializer.Serialize(Players, _jsonOptions);
             File.WriteAllText(PlayersFilePath, json);
+        }
+
+        public void AdjustPlayersByRound(IRound round)
+        {
+            switch (round)
+            {
+                case Round regularRound:
+                    AdjustByRegularRound(regularRound);
+                    break;
+
+                case DrawRound drawRound:
+                    AdjustByDrawRound(drawRound);
+                    break;
+            }
+        }
+
+        private void AdjustByDrawRound(DrawRound round)
+        {
+            if (!Players.TryGetValue(round.Player1, out Player? player1) ||
+                !Players.TryGetValue(round.Player2, out Player? player2))
+            {
+                throw new ArgumentException("Failed to get winner/looser player for Round.");
+            }
+
+            player1.GamesDrawed++;
+            player2.GamesDrawed++;
+        }
+
+        private void AdjustByRegularRound(Round round)
+        {
+            if (!Players.TryGetValue(round.Winner, out Player? winner) ||
+                !Players.TryGetValue(round.Loser, out Player? loser))
+            {
+                throw new ArgumentException("Failed to get winner/looser player for Round.");
+            }
+
+            winner.GamesWon++;
+            loser.GamesLost++;
         }
 
         public string PlayersFilePath { get; }
