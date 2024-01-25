@@ -14,6 +14,7 @@ namespace WebApplication1
         }
 
         private readonly object _lock = new();
+        private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
         private HashSet<Player> ReadPlayersFromFile(string filePath)
         {
@@ -48,7 +49,7 @@ namespace WebApplication1
 
         private void ToFileNoLock()
         {
-            var json = JsonSerializer.Serialize(Players, new JsonSerializerOptions() { WriteIndented = true });
+            var json = JsonSerializer.Serialize(Players, _jsonOptions);
             File.WriteAllText(PlayersFilePath, json);
         }
 

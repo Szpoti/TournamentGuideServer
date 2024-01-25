@@ -9,7 +9,7 @@ namespace WebApplication1.Controllers
     {
         private ILogger<PlayerController> _logger;
 
-        public PlayerManager PlayerManager { get; }
+        private PlayerManager PlayerManager { get; }
 
         public PlayerController(ILogger<PlayerController> logger, PlayerManager playerManager)
         {
