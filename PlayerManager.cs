@@ -16,15 +16,16 @@ namespace TournamentGuideServer
         private readonly object _lock = new();
         private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
-        private HashSet<Player> ReadPlayersFromFile(string filePath)
+        private Dictionary<Guid, Player> ReadPlayersFromFile(string filePath)
         {
             IOHelpers.CreateIfDirectoryDoesntExist(filePath);
 
             try
             {
                 var json = File.ReadAllText(filePath);
-                var result = JsonSerializer.Deserialize<HashSet<Player>>(json);
-                return result is null ? throw new InvalidDataException("Can't deserialize players.json.") : result;
+                var result = JsonSerializer.Deserialize<Player[]>(json);
+                var dic = result?.ToDictionary(x => x.Id, x => x);
+                return dic is null ? throw new InvalidDataException("Can't deserialize players.json.") : dic;
             }
             catch (FileNotFoundException)
             {
@@ -35,63 +36,73 @@ namespace TournamentGuideServer
 
         public bool TryAddPlayer(Player player)
         {
-            if (Players.Contains(player))
+            if (Players.ContainsKey(player.Id))
             {
                 return false;
             }
             lock (_lock)
             {
-                Players.Add(player);
+                Players.Add(player.Id, player);
                 ToFileNoLock();
             }
             return true;
         }
 
-        private void ToFileNoLock()
+        public void AdjustPlayersByRound(Round round)
         {
-            var json = JsonSerializer.Serialize(Players, _jsonOptions);
-            File.WriteAllText(PlayersFilePath, json);
-        }
-
-        public void AdjustPlayersByRound(IRound round)
-        {
-            switch (round)
-            {
-                case Round regularRound:
-                    AdjustByRegularRound(regularRound);
-                    break;
-
-                case DrawRound drawRound:
-                    AdjustByDrawRound(drawRound);
-                    break;
-            }
-        }
-
-        private void AdjustByDrawRound(DrawRound round)
-        {
-            if (!Players.TryGetValue(round.Player1, out Player? player1) ||
-                !Players.TryGetValue(round.Player2, out Player? player2))
+            if (!Players.TryGetValue(round.Player1.Id, out Player? player1) ||
+                !Players.TryGetValue(round.Player2.Id, out Player? player2))
             {
                 throw new ArgumentException("Failed to get winner/looser player for Round.");
             }
 
+            if (round.IsDraw)
+            {
+                AdjustByDraw(player1, player2);
+            }
+            else
+            {
+                AdjustByRules(round, player1, player2);
+            }
+
+            ToFile();
+        }
+
+        private static void AdjustByDraw(Player player1, Player player2)
+        {
             player1.GamesDrawed++;
             player2.GamesDrawed++;
         }
 
-        private void AdjustByRegularRound(Round round)
+        private static void AdjustByRules(Round round, Player player1, Player player2)
         {
-            if (!Players.TryGetValue(round.Winner, out Player? winner) ||
-                !Players.TryGetValue(round.Loser, out Player? loser))
+            if (round.WinnerColour == round.Player1.Colour)
             {
-                throw new ArgumentException("Failed to get winner/looser player for Round.");
+                player1.GamesWon++;
+                player2.GamesLost++;
             }
+            else
+            {
+                player2.GamesWon++;
+                player1.GamesLost++;
+            }
+        }
 
-            winner.GamesWon++;
-            loser.GamesLost++;
+        private void ToFileNoLock()
+        {
+            var json = JsonSerializer.Serialize(Players.Values, _jsonOptions);
+            File.WriteAllText(PlayersFilePath, json);
+        }
+
+        private void ToFile()
+        {
+            lock (_lock)
+            {
+                ToFileNoLock();
+            }
         }
 
         public string PlayersFilePath { get; }
-        public HashSet<Player> Players { get; set; }
+        public Dictionary<Guid, Player> Players { get; set; }
     }
 }

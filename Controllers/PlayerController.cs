@@ -20,7 +20,7 @@ namespace TournamentGuideServer.Controllers
         [HttpGet("players", Name = "GetAllPlayers")]
         public IEnumerable<Player> GetAllPlayers()
         {
-            return PlayerManager.Players;
+            return PlayerManager.Players.Values;
         }
 
         [HttpPost("add-player", Name = "AddNewPlayer")]

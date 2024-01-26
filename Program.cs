@@ -1,6 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-using System.Security.AccessControl;
-
 namespace TournamentGuideServer
 {
     public class Program
@@ -12,12 +9,24 @@ namespace TournamentGuideServer
             // Add services to the container.
             builder.Services.AddControllers();
 
-            // Dependency injection.
-            InjectDependencies(builder);
-
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle.
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            // Allow Cors.
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigin",
+                    policyBuilder =>
+                    {
+                        policyBuilder.WithOrigins("http://localhost:3000") // Replace with your client app's URL
+                                     .AllowAnyHeader()
+                                     .AllowAnyMethod();
+                    });
+            });
+
+            // Dependency injection.
+            InjectDependencies(builder);
 
             var app = builder.Build();
 
@@ -29,6 +38,8 @@ namespace TournamentGuideServer
             }
 
             app.UseHttpsRedirection();
+
+            app.UseCors("AllowSpecificOrigin");
 
             app.UseAuthorization();
 

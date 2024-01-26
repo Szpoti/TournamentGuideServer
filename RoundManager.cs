@@ -15,14 +15,14 @@ namespace TournamentGuideServer
         private readonly object _lock = new();
         private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
-        private HashSet<IRound> ReadRoundsFromFile(string filePath)
+        private HashSet<Round> ReadRoundsFromFile(string filePath)
         {
             IOHelpers.CreateIfDirectoryDoesntExist(filePath);
 
             try
             {
                 var json = File.ReadAllText(filePath);
-                var result = JsonSerializer.Deserialize<HashSet<IRound>>(json);
+                var result = JsonSerializer.Deserialize<HashSet<Round>>(json);
                 return result is null ? throw new InvalidDataException("Can't deserialize rounds.json.") : result;
             }
             catch (FileNotFoundException)
@@ -32,7 +32,7 @@ namespace TournamentGuideServer
             }
         }
 
-        public bool TryAddRound(IRound round)
+        public bool TryAddRound(Round round)
         {
             if (Rounds.Contains(round))
             {
@@ -42,12 +42,27 @@ namespace TournamentGuideServer
             {
                 Rounds.Add(round);
                 PlayerManager.AdjustPlayersByRound(round);
+                ToFileNoLock();
                 return true;
             }
         }
 
+        private void ToFileNoLock()
+        {
+            var json = JsonSerializer.Serialize(Rounds, _jsonOptions);
+            File.WriteAllText(RoundsFilePath, json);
+        }
+
+        private void ToFile()
+        {
+            lock (_lock)
+            {
+                ToFileNoLock();
+            }
+        }
+
         public string RoundsFilePath { get; }
-        public HashSet<IRound> Rounds { get; set; }
+        public HashSet<Round> Rounds { get; set; }
         public PlayerManager PlayerManager { get; }
     }
 }
