@@ -61,6 +61,15 @@ namespace TournamentGuideServer
             }
         }
 
+        public Round RemoveRound(string roundId)
+        {
+            var round = Rounds.SingleOrDefault(round => round.Id.ToString() == roundId) ?? throw new InvalidDataException($"Round with {roundId} was not found.");
+
+            Rounds.Remove(round);
+            ToFile();
+            return round;
+        }
+
         public string RoundsFilePath { get; }
         public HashSet<Round> Rounds { get; set; }
         public PlayerManager PlayerManager { get; }

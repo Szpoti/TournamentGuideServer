@@ -25,6 +25,23 @@ namespace TournamentGuideServer.Controllers
             return RoundManager.Rounds;
         }
 
+        [HttpGet("remove-round/{roundId}", Name = "RemoveRound")]
+        public IActionResult RemoveRound(string roundId)
+        {
+            try
+            {
+                Round removedRound = RoundManager.RemoveRound(roundId);
+                PlayerManager.RoundRemoved(removedRound);
+                return StatusCode(200, $"Removed round {roundId}.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding new round.");
+
+                return StatusCode(500, $"An error occurred while removing the round. {ex}");
+            }
+        }
+
         [HttpPost("add-round", Name = "AddNewRound")]
         public IActionResult AddNewRound([FromBody] Round newRound)
         {
