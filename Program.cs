@@ -50,7 +50,7 @@ namespace TournamentGuideServer
 
         private static void InjectDependencies(WebApplicationBuilder builder)
         {
-            var datadir = Common.GetDataDir();
+            var datadir = Common.GetProcessPath();
             PlayerManager playerManager = new(datadir);
             // Inject dependencies here.
             builder.Services.AddSingleton(playerManager);
