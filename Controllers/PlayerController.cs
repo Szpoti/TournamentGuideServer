@@ -11,10 +11,13 @@ namespace TournamentGuideServer.Controllers
 
         private PlayerManager PlayerManager { get; }
 
-        public PlayerController(ILogger<PlayerController> logger, PlayerManager playerManager)
+        private readonly string? _apiKey;
+
+        public PlayerController(ILogger<PlayerController> logger, PlayerManager playerManager, IConfiguration configuration)
         {
             _logger = logger;
             PlayerManager = playerManager;
+            _apiKey = configuration["API_KEY"];
         }
 
         [HttpGet("players", Name = "GetAllPlayers")]
@@ -45,6 +48,36 @@ namespace TournamentGuideServer.Controllers
 
                 // Return a 500 Internal Server Error
                 return StatusCode(500, "An error occurred while adding the player");
+            }
+        }
+
+        [HttpPost("modify-player", Name = "ModifyExistingPlayer")]
+        public IActionResult ModifyExistingPlayer([FromBody] PlayerModifyRequest request)
+        {
+            try
+            {
+                if (request.Player.Name == "string")
+                {
+                    // Swagger test response.
+                    return CreatedAtRoute("ModifyExistingPlayer", new { id = request.Player.Id }, request.Player);
+                }
+
+                if(request.ApiKey != _apiKey)
+                {
+                    return StatusCode(500, "ApiKey not recognized.");
+                }
+
+                PlayerManager.ModifyPlayer(request.Player);
+
+                // Return a success response - 201 Created
+                return CreatedAtRoute("ModifyExistingPlayer", new { id = request.Player.Id }, request.Player);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error modifying existing player");
+
+                // Return a 500 Internal Server Error
+                return StatusCode(500, "An error occurred while modifying the player");
             }
         }
     }

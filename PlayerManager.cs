@@ -10,6 +10,7 @@ namespace TournamentGuideServer
         public PlayerManager(string dataDir)
         {
             PlayersFilePath = Path.Combine(dataDir, "players.json");
+            PlayersBackupFilePath = Path.Combine(dataDir, "playersBackup.json");
             Players = ReadPlayersFromFile(PlayersFilePath);
         }
 
@@ -48,6 +49,14 @@ namespace TournamentGuideServer
             return true;
         }
 
+        public void ModifyPlayer(Player player)
+        {
+            BackupPlayersFile();
+            Players[player.Id] = player;
+            ToFile();
+        }
+
+
         public void AdjustPlayersByRound(Round round)
         {
             if (!Players.TryGetValue(round.Player1.Id, out Player? player1) ||
@@ -75,12 +84,19 @@ namespace TournamentGuideServer
             {
                 throw new ArgumentException("Failed to get winner/looser player for Round.");
             }
-
             var winner = removedRound.Player1.Colour == removedRound.WinnerColour ? player1 : player2;
             var looser = winner == player1 ? player2 : player1;
 
-            winner.GamesWon--;
-            looser.GamesLost--;
+            if(removedRound.IsDraw)
+            {
+                winner.GamesDrawed--;
+                looser.GamesDrawed--;
+            }
+            else
+            {
+                winner.GamesWon--;
+                looser.GamesLost--;
+            }
             ToFile();
         }
 
@@ -118,7 +134,18 @@ namespace TournamentGuideServer
             }
         }
 
+        private void BackupPlayersFile()
+        {
+            lock (_lock)
+            {
+                var json = JsonSerializer.Serialize(Players.Values, _jsonOptions);
+                File.WriteAllText(PlayersBackupFilePath, json);
+            }
+        }
+
+
         public string PlayersFilePath { get; }
+        public string PlayersBackupFilePath { get; }
         public Dictionary<Guid, Player> Players { get; set; }
     }
 }
